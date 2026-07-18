@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,9 +24,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-(!m#=+h0eq7t+go1*yn3+5tx1930-86h+(osy-5dz!%s8vtzy("
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = (
+    os.environ.get("ALLOWED_HOSTS", "").split(",")
+    if os.environ.get("ALLOWED_HOSTS")
+    else []
+)
 
 
 # Application definition
@@ -43,6 +48,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "django_filters",
     "catalog",
+    "orders",
+    "storefront",
 ]
 
 AUTH_USER_MODEL = "users.User"
@@ -63,6 +70,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,6 +106,15 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        # SQLite has no row-level locking. Starting every atomic() block with
+        # BEGIN IMMEDIATE (transaction_mode) plus a generous busy timeout makes
+        # concurrent writers serialize cleanly: the loser of a race blocks,
+        # then reads fresh data -- so it raises a clean InsufficientStockError
+        # instead of a "database is locked" error. See README for details.
+        "OPTIONS": {
+            "timeout": 20,
+            "transaction_mode": "IMMEDIATE",
+        },
     }
 }
 
@@ -137,12 +154,35 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# CompressedManifestStaticFilesStorage requires `collectstatic` to have run
+# (it looks up a hashed filename per asset in a manifest file). That's true in
+# the prod image, but not in local dev/test, so fall back to plain storage
+# there -- otherwise any page using {% static %} (e.g. the admin) breaks.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
 
 # Media files (user-uploaded content, e.g. product images)
 # https://docs.djangoproject.com/en/6.0/topics/files/
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Authentication redirects (storefront login/logout flow)
 LOGIN_URL = "storefront:login"
