@@ -37,9 +37,22 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "users",
     "main",
     "rest_framework",
+    "rest_framework_simplejwt",
 ]
+
+AUTH_USER_MODEL = "users.User"
+
+# Django REST Framework
+# https://www.django-rest-framework.org/api-guide/settings/
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -117,3 +130,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+# Authentication redirects (storefront login/logout flow)
+LOGIN_URL = "storefront:login"
+LOGIN_REDIRECT_URL = "storefront:home"
+LOGOUT_REDIRECT_URL = "storefront:home"
