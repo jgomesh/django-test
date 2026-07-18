@@ -2,6 +2,24 @@
 
 <!-- version list -->
 
+## v1.2.0 (2026-07-18)
+
+### Bug Fixes
+
+- **admin**: Sync stored Order.valor_total when saved from the admin
+  ([`63ea77e`](https://github.com/jgomesh/django-test/commit/63ea77e34fdc03fb4cceec22fccbbf2689063f65))
+
+### Documentation
+
+- **readme**: Trim to essentials
+  ([`593ad48`](https://github.com/jgomesh/django-test/commit/593ad4893fe2ff807cdb06c3c071beb3094fc934))
+
+### Features
+
+- **security**: Add DRF rate limiting
+  ([`3e55546`](https://github.com/jgomesh/django-test/commit/3e55546b2482b68c1cee7832b4a07b7e919b4349))
+
+
 ## v1.1.2 (2026-07-18)
 
 ### Bug Fixes
