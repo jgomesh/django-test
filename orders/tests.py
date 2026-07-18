@@ -380,3 +380,21 @@ class OrderAdminTests(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "itens")  # inline verbose name present
+
+    def test_valor_total_is_not_an_editable_input(self):
+        order = self._make_order()
+        url = reverse("admin:orders_order_change", args=[order.pk])
+        resp = self.client.get(url)
+        self.assertNotContains(resp, 'name="valor_total"')
+        self.assertContains(resp, f"R$ {order.valor_total}")
+
+    def test_valor_total_reflects_live_item_sum(self):
+        order = self._make_order()
+        order.valor_total = Decimal("999999.00")  # stale/tampered stored value
+        order.save(update_fields=["valor_total"])
+
+        url = reverse("admin:orders_order_change", args=[order.pk])
+        resp = self.client.get(url)
+        real_total = sum((item.subtotal for item in order.itens.all()), Decimal("0.00"))
+        self.assertContains(resp, f"R$ {real_total}")
+        self.assertNotContains(resp, "R$ 999999.00")
