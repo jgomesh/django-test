@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "django_filters",
     "catalog",
+    "orders",
+    "storefront",
 ]
 
 AUTH_USER_MODEL = "users.User"

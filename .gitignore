@@ -5,12 +5,16 @@ __pycache__/
 .venv/
 
 # Django
-db.sqlite3
 staticfiles/
 media/
 
 # Env vars
 .env
+
+# Test/lint artifacts
+.coverage
+.mypy_cache/
+.pytest_cache/
 
 # IDE
 .vscode/
