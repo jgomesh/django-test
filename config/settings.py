@@ -101,6 +101,24 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        # SQLite has no row-level locking. Starting every atomic() block with
+        # BEGIN IMMEDIATE (transaction_mode) plus a generous busy timeout makes
+        # concurrent writers serialize cleanly: the loser of a race blocks,
+        # then reads fresh data -- so it raises a clean InsufficientStockError
+        # instead of a "database is locked" error. See README for details.
+        "OPTIONS": {
+            "timeout": 20,
+            "transaction_mode": "IMMEDIATE",
+        },
+        # Django's default in-memory SQLite test DB uses shared-cache mode,
+        # whose busy handler doesn't reliably kick in for cache locks -- that
+        # can make a real concurrency test (two threads, one connection each)
+        # flaky, with the loser failing fast instead of blocking. A file-based
+        # test DB behaves like real SQLite (proper OS-level locking), so the
+        # race test is deterministic on every platform, CI included.
+        "TEST": {
+            "NAME": BASE_DIR / "test_db.sqlite3",
+        },
     }
 }
 

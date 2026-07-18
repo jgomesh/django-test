@@ -15,6 +15,7 @@ media/
 .coverage
 .mypy_cache/
 .pytest_cache/
+test_db.sqlite3
 
 # IDE
 .vscode/
