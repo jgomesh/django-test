@@ -19,16 +19,21 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from main.views import status
+from users.views import ThrottledTokenObtainPairView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/status/", status, name="status"),
     path("api/v1/", include("catalog.urls")),
     path("api/v1/", include("orders.urls")),
-    path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path(
+        "api/v1/token/",
+        ThrottledTokenObtainPairView.as_view(),
+        name="token_obtain_pair",
+    ),
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("", include("storefront.urls")),
 ]

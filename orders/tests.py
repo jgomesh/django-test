@@ -445,3 +445,53 @@ class OrderAdminTests(TestCase):
         # though the product's current price changed to 777.00 in this test.
         existing_item.refresh_from_db()
         self.assertNotEqual(existing_item.preco_unitario, Decimal("777.00"))
+
+    def test_creating_order_from_scratch_in_admin_sets_correct_valor_total(self):
+        """A brand new Order made directly via "Adicionar pedido" (not
+        through orders.services.create_order) must still end up with a
+        correct *stored* valor_total -- the API and storefront read that
+        field directly, they don't recompute it live like the admin does.
+        """
+        url = reverse("admin:orders_order_add")
+        post_data = {
+            "usuario": str(self.buyer.id),
+            "status": "pendente",
+            "itens-TOTAL_FORMS": "1",
+            "itens-INITIAL_FORMS": "0",
+            "itens-MIN_NUM_FORMS": "0",
+            "itens-MAX_NUM_FORMS": "1000",
+            "itens-0-id": "",
+            "itens-0-produto": str(self.product.id),
+            "itens-0-quantidade": "12",
+            "_save": "Salvar",
+        }
+        resp = self.client.post(url, post_data, follow=True)
+        self.assertEqual(resp.status_code, 200)
+
+        order = Order.objects.get(usuario=self.buyer)
+        self.assertEqual(order.valor_total, self.product.preco * 12)
+
+    def test_removing_item_via_inline_updates_stored_valor_total(self):
+        order = self._make_order()
+        item = order.itens.get()
+        url = reverse("admin:orders_order_change", args=[order.pk])
+        post_data = {
+            "usuario": str(order.usuario_id),
+            "status": order.status,
+            "itens-TOTAL_FORMS": "1",
+            "itens-INITIAL_FORMS": "1",
+            "itens-MIN_NUM_FORMS": "0",
+            "itens-MAX_NUM_FORMS": "1000",
+            "itens-0-id": str(item.pk),
+            "itens-0-pedido": str(order.pk),
+            "itens-0-produto": str(item.produto_id),
+            "itens-0-quantidade": str(item.quantidade),
+            "itens-0-DELETE": "on",
+            "_save": "Salvar",
+        }
+        resp = self.client.post(url, post_data, follow=True)
+        self.assertEqual(resp.status_code, 200)
+
+        order.refresh_from_db()
+        self.assertEqual(order.itens.count(), 0)
+        self.assertEqual(order.valor_total, Decimal("0.00"))
