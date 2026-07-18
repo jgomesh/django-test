@@ -66,6 +66,7 @@ Filtro de produtos: `?categoria=<id>` ou `?categoria_slug=<slug>`.
 - **IDOR:** toda consulta/escrita de `Order` filtra por `request.user`; o dono nunca vem do payload.
 - **SQL Injection:** apenas ORM em todo o projeto, sem `.raw()`/`.extra()`.
 - **Autenticação:** JWT (`djangorestframework-simplejwt`) — stateless, `access` expira em 5 min, renovável via `refresh`.
+- **Rate limiting:** DRF throttling — `30/min` por IP anônimo e `120/min` por usuário autenticado em toda a API; `/api/v1/token/` (login) tem limite próprio e mais restrito, `5/min` por IP, contra brute-force de senha.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/token/ \
