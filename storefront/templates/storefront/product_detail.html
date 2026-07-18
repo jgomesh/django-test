@@ -1,0 +1,46 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}{{ produto.nome }} - Loja{% endblock %}
+
+{% block content %}
+<a href="{% url 'storefront:home' %}" class="text-blue-700 text-sm">&larr; Voltar</a>
+
+<div class="bg-white rounded-lg shadow p-8 mt-4 max-w-2xl">
+    <p class="text-gray-400 text-sm mb-1">{{ produto.categoria.nome }}</p>
+    <h1 class="text-3xl font-bold mb-2">{{ produto.nome }}</h1>
+    <p class="text-gray-400 text-xs mb-4">SKU: {{ produto.sku }}</p>
+
+    {% if produto.imagem %}
+        <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" class="mb-6 rounded max-h-72">
+    {% endif %}
+
+    <p class="text-blue-700 font-bold text-3xl mb-4">R$ {{ produto.preco }}</p>
+
+    {% if produto.em_estoque %}
+        <p class="text-green-600 mb-6">Em estoque: {{ produto.quantidade_estoque }} unidade(s)</p>
+    {% else %}
+        <p class="text-red-600 mb-6">Produto esgotado</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+        {% if produto.em_estoque %}
+        <form action="{% url 'storefront:comprar' produto.slug %}" method="post">
+            {% csrf_token %}
+            <button type="submit"
+                    class="bg-blue-600 text-white rounded px-6 py-3 font-semibold hover:bg-blue-700">
+                Comprar
+            </button>
+        </form>
+        {% else %}
+        <button disabled class="bg-gray-300 text-gray-500 rounded px-6 py-3 font-semibold cursor-not-allowed">
+            Indisponível
+        </button>
+        {% endif %}
+    {% else %}
+        <p class="text-gray-600">
+            <a href="{% url 'storefront:login' %}?next={{ request.path }}" class="text-blue-700 underline">Entre</a>
+            para comprar.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}
