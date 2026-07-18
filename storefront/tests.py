@@ -145,7 +145,7 @@ class CarrinhoTests(TestCase):
             follow=True,
         )
         self.assertContains(resp, "Fone")
-        self.assertContains(resp, "R$ 199.80")  # 2 x 99.90
+        self.assertContains(resp, "R$ 199,80")  # 2 x 99.90
 
     def test_adicionar_ao_carrinho_accumulates_quantity(self):
         self.client.post(
@@ -157,7 +157,7 @@ class CarrinhoTests(TestCase):
             {"quantidade": 3},
         )
         resp = self.client.get(reverse("storefront:carrinho"))
-        self.assertContains(resp, "R$ 499.50")  # 5 x 99.90
+        self.assertContains(resp, "R$ 499,50")  # 5 x 99.90
 
     def test_carrinho_header_badge_shows_item_count(self):
         self.client.post(
@@ -177,7 +177,7 @@ class CarrinhoTests(TestCase):
             {"quantidade": 4},
         )
         resp = self.client.get(reverse("storefront:carrinho"))
-        self.assertContains(resp, "R$ 399.60")  # 4 x 99.90
+        self.assertContains(resp, "R$ 399,60")  # 4 x 99.90
 
     def test_atualizar_item_carrinho_to_zero_removes_it(self):
         self.client.post(

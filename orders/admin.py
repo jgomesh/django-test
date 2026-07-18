@@ -11,8 +11,14 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     autocomplete_fields = ("produto",)
-    fields = ("produto", "quantidade", "preco_unitario", "subtotal")
-    readonly_fields = ("subtotal",)
+    fields = ("produto", "quantidade", "preco_unitario_exibido", "subtotal")
+    readonly_fields = ("preco_unitario_exibido", "subtotal")
+
+    @admin.display(description="preço unitário")
+    def preco_unitario_exibido(self, obj: OrderItem) -> str:
+        if obj.pk is None:
+            return "-"
+        return f"R$ {obj.preco_unitario}"
 
     def subtotal(self, obj: OrderItem) -> str:
         if obj.pk is None:
@@ -33,6 +39,19 @@ class OrderAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request: HttpRequest) -> QuerySet:
         return super().get_queryset(request).select_related("usuario")
+
+    def save_formset(self, request: HttpRequest, form, formset, change: bool) -> None:
+        """New OrderItems get the product's *current registered price* --
+        ``preco_unitario`` isn't in the inline form at all (it's readonly), so
+        without this it would fail the NOT NULL constraint. Existing items
+        keep their frozen historical price untouched.
+        """
+        instances = formset.save(commit=False)
+        for obj in instances:
+            if isinstance(obj, OrderItem) and obj.pk is None:
+                obj.preco_unitario = obj.produto.preco
+            obj.save()
+        formset.save_m2m()
 
     @admin.display(description="valor total")
     def valor_total_exibido(self, obj: Order | None) -> str:

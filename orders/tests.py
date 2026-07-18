@@ -398,3 +398,50 @@ class OrderAdminTests(TestCase):
         real_total = sum((item.subtotal for item in order.itens.all()), Decimal("0.00"))
         self.assertContains(resp, f"R$ {real_total}")
         self.assertNotContains(resp, "R$ 999999.00")
+
+    def test_preco_unitario_is_not_an_editable_input(self):
+        order = self._make_order()
+        url = reverse("admin:orders_order_change", args=[order.pk])
+        resp = self.client.get(url)
+        self.assertNotContains(resp, 'name="itens-0-preco_unitario"')
+
+    def test_new_item_added_via_admin_uses_products_current_price(self):
+        order = self._make_order()
+        self.product.preco = Decimal("777.00")
+        self.product.save(update_fields=["preco"])
+
+        other_product = make_product(
+            categoria=self.category, quantidade_estoque=10, sku="Z2", slug="z2"
+        )
+        other_product.preco = Decimal("42.50")
+        other_product.save(update_fields=["preco"])
+
+        url = reverse("admin:orders_order_change", args=[order.pk])
+        existing_item = order.itens.get()
+        post_data = {
+            "usuario": str(order.usuario_id),
+            "status": order.status,
+            "itens-TOTAL_FORMS": "2",
+            "itens-INITIAL_FORMS": "1",
+            "itens-MIN_NUM_FORMS": "0",
+            "itens-MAX_NUM_FORMS": "1000",
+            "itens-0-id": str(existing_item.pk),
+            "itens-0-pedido": str(order.pk),
+            "itens-0-produto": str(existing_item.produto_id),
+            "itens-0-quantidade": str(existing_item.quantidade),
+            "itens-1-id": "",
+            "itens-1-pedido": str(order.pk),
+            "itens-1-produto": str(other_product.pk),
+            "itens-1-quantidade": "2",
+            "_save": "Salvar",
+        }
+        resp = self.client.post(url, post_data, follow=True)
+        self.assertEqual(resp.status_code, 200)
+
+        new_item = order.itens.get(produto=other_product)
+        self.assertEqual(new_item.preco_unitario, Decimal("42.50"))
+
+        # The pre-existing item's frozen historical price is untouched, even
+        # though the product's current price changed to 777.00 in this test.
+        existing_item.refresh_from_db()
+        self.assertNotEqual(existing_item.preco_unitario, Decimal("777.00"))
