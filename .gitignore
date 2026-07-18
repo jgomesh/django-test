@@ -6,7 +6,10 @@ __pycache__/
 
 # Django
 staticfiles/
-media/
+# media/ is intentionally NOT ignored: the challenge ships a populated
+# db.sqlite3, and its Product.imagem rows point at files under here --
+# without committing them, every image is a broken link for anyone who
+# clones the repo.
 
 # Env vars
 .env
