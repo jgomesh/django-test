@@ -45,21 +45,41 @@ class OrderAdmin(admin.ModelAdmin):
         ``preco_unitario`` isn't in the inline form at all (it's readonly), so
         without this it would fail the NOT NULL constraint. Existing items
         keep their frozen historical price untouched.
+
+        Also re-syncs the stored ``Order.valor_total`` from the real items
+        afterwards. An order created/edited straight from the admin bypasses
+        ``orders.services.create_order`` (which is what normally keeps that
+        field correct), so without this it would silently save as 0.00 --
+        wrong everywhere else that reads the *stored* field (the API,
+        storefront "meus pedidos"), even though the admin's own display
+        recomputes it live and would have masked the problem here.
         """
+        if formset.model is not OrderItem:
+            formset.save()
+            return
+
         instances = formset.save(commit=False)
         for obj in instances:
-            if isinstance(obj, OrderItem) and obj.pk is None:
+            if obj.pk is None:
                 obj.preco_unitario = obj.produto.preco
             obj.save()
+        for obj in formset.deleted_objects:
+            obj.delete()
         formset.save_m2m()
+
+        order = form.instance
+        order.valor_total = sum(
+            (item.subtotal for item in order.itens.all()), Decimal("0.00")
+        )
+        order.save(update_fields=["valor_total"])
 
     @admin.display(description="valor total")
     def valor_total_exibido(self, obj: Order | None) -> str:
         """Always the live sum of the order's items -- never a free-typed input.
 
         This is deliberately NOT the stored ``Order.valor_total`` field, so it
-        stays correct even if an item's quantity/price is edited via the
-        inline after the order was first created.
+        stays correct on this page even before the first save_formset run
+        (e.g. rendering right after an add) syncs the stored field.
         """
         if obj is None or obj.pk is None:
             return "-"
