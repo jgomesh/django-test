@@ -87,7 +87,7 @@ e cadastrar categoria/produto direto pelo `/admin/`.
 Usuário admin (staff + superuser), já existente no `db.sqlite3` entregue:
 
 - **Usuário:** `admin`
-- **Senha:** `<preencher>`
+- **Senha:** `admin123!@#`
 
 Usa essas credenciais tanto no Django Admin (`/admin/`) quanto no login do site (pra testar carrinho/"Comprar") e na API (`POST /api/v1/token/` pra pegar o JWT).
 
