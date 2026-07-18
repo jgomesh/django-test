@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     "main",
     "rest_framework",
     "rest_framework_simplejwt",
+    "django_filters",
+    "catalog",
 ]
 
 AUTH_USER_MODEL = "users.User"
@@ -52,6 +54,11 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
 
 MIDDLEWARE = [
@@ -130,6 +137,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+# Media files (user-uploaded content, e.g. product images)
+# https://docs.djangoproject.com/en/6.0/topics/files/
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Authentication redirects (storefront login/logout flow)
 LOGIN_URL = "storefront:login"
