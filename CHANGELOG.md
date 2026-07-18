@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.3.0 (2026-07-18)
+
+### Chores
+
+- **catalog**: Add demo product images
+  ([`227e705`](https://github.com/jgomesh/django-test/commit/227e70510bcf5f4fa39de7b67844c22e70cb93da))
+
+### Features
+
+- **ui**: Redesign the storefront header
+  ([`023048a`](https://github.com/jgomesh/django-test/commit/023048a9044ef70e75164fbfe3449ea104a71cb4))
+
+
 ## v1.2.0 (2026-07-18)
 
 ### Bug Fixes
