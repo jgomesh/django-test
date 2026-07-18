@@ -8,37 +8,63 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
-    <header class="bg-blue-700">
+    <header class="sticky top-0 z-40 bg-blue-700 shadow-md shadow-blue-900/20 border-b border-blue-800/50">
         <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-            <a href="{% url 'storefront:home' %}" class="text-lg font-extrabold text-white tracking-tight shrink-0">
-                E-Commerce Híbrido
+            <a href="{% url 'storefront:home' %}" class="flex items-center gap-2.5 shrink-0 group">
+                <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-white text-blue-700
+                             font-extrabold text-sm tracking-tight ring-1 ring-white/40
+                             group-hover:ring-yellow-400 transition-shadow">
+                    EH
+                </span>
+                <span class="text-base font-extrabold tracking-tight text-white leading-none">
+                    E-Commerce <span class="text-yellow-400">Híbrido</span>
+                </span>
             </a>
-            <nav class="text-sm flex items-center gap-3 shrink-0">
+
+            <nav class="text-sm flex items-center gap-1 sm:gap-1.5 shrink-0">
                 {% if user.is_authenticated %}
-                    <span class="text-blue-50">Olá, <strong>{{ user.username }}</strong></span>
+                    <div class="flex items-center gap-2 pr-2 mr-1 border-r border-white/15">
+                        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-white/15
+                                     ring-1 ring-white/25 text-xs font-bold text-white shrink-0">
+                            {{ user.username|first|upper }}
+                        </span>
+                        <span class="hidden sm:inline text-blue-50">{{ user.username }}</span>
+                    </div>
+
                     <a href="{% url 'storefront:carrinho' %}"
-                       class="relative text-blue-50 hover:text-white" title="Carrinho">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       class="relative flex items-center justify-center w-10 h-10 rounded-full text-blue-50
+                              hover:text-white hover:bg-white/10 transition-colors" title="Carrinho">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         {% if cart_count %}
-                        <span class="absolute -top-2 -right-2 bg-yellow-400 text-blue-900 text-xs font-bold
-                                     rounded-full w-5 h-5 flex items-center justify-center">
+                        <span class="absolute top-0.5 right-0.5 bg-yellow-400 text-blue-900 text-[10px] font-bold
+                                     rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center
+                                     ring-2 ring-blue-700">
                             {{ cart_count }}
                         </span>
                         {% endif %}
                     </a>
+
                     {% if user.is_staff %}
-                        <a href="/admin/" class="text-blue-50 hover:text-white hover:underline">Admin</a>
+                        <a href="/admin/"
+                           class="text-blue-50 hover:text-white hover:bg-white/10 rounded-full px-3 py-1.5 transition-colors">
+                            Admin
+                        </a>
                     {% endif %}
+
                     <form action="{% url 'storefront:logout' %}" method="post" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="text-blue-50 hover:text-white hover:underline">Sair</button>
+                        <button type="submit"
+                                class="text-blue-50 hover:text-white hover:bg-white/10 rounded-full px-3 py-1.5 transition-colors">
+                            Sair
+                        </button>
                     </form>
                 {% else %}
                     <a href="{% url 'storefront:login' %}"
-                       class="bg-white text-blue-700 font-semibold rounded px-4 py-1.5 hover:bg-blue-50">
+                       class="bg-white text-blue-700 font-semibold rounded-full px-5 py-2 shadow-sm
+                              hover:shadow hover:bg-blue-50 transition-all">
                         Entrar
                     </a>
                 {% endif %}
