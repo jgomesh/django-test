@@ -1,0 +1,78 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Carrinho - Loja{% endblock %}
+
+{% block content %}
+<h1 class="text-xl font-semibold text-gray-800 mb-6">Meu carrinho</h1>
+
+{% if itens %}
+<div class="space-y-3">
+    {% for linha in itens %}
+    <article class="bg-white rounded-lg shadow-sm p-4 flex items-center gap-4">
+        <div class="w-16 h-16 rounded bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+            {% if linha.produto.imagem %}
+                <img src="{{ linha.produto.imagem.url }}" alt="{{ linha.produto.nome }}"
+                     class="w-full h-full object-cover">
+            {% else %}
+                <svg class="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 6h16v12H4V6z" />
+                </svg>
+            {% endif %}
+        </div>
+
+        <div class="flex-1 min-w-0">
+            <a href="{% url 'storefront:product_detail' linha.produto.slug %}"
+               class="font-medium text-gray-800 hover:text-blue-700 truncate block">
+                {{ linha.produto.nome }}
+            </a>
+            <p class="text-sm text-gray-400">R$ {{ linha.produto.preco }} / unidade</p>
+        </div>
+
+        <form action="{% url 'storefront:atualizar_item_carrinho' linha.produto.id %}" method="post"
+              class="flex items-center gap-1">
+            {% csrf_token %}
+            <input type="number" name="quantidade" value="{{ linha.quantidade }}" min="1"
+                   max="{{ linha.produto.quantidade_estoque }}"
+                   class="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center">
+            <button type="submit"
+                    class="text-xs text-blue-700 border border-blue-200 rounded px-2 py-1.5 hover:bg-blue-50">
+                Atualizar
+            </button>
+        </form>
+
+        <p class="w-24 text-right font-semibold text-gray-900">R$ {{ linha.subtotal }}</p>
+
+        <form action="{% url 'storefront:remover_do_carrinho' linha.produto.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="text-gray-400 hover:text-red-600" title="Remover">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </form>
+    </article>
+    {% endfor %}
+</div>
+
+<div class="bg-white rounded-lg shadow-sm p-5 mt-6 flex items-center justify-between max-w-md ml-auto">
+    <div>
+        <p class="text-sm text-gray-500">Total</p>
+        <p class="text-2xl font-bold text-gray-900">R$ {{ total }}</p>
+    </div>
+    <form action="{% url 'storefront:finalizar_compra' %}" method="post">
+        {% csrf_token %}
+        <button type="submit"
+                class="bg-blue-600 text-white rounded px-6 py-3 font-semibold hover:bg-blue-700">
+            Finalizar compra
+        </button>
+    </form>
+</div>
+{% else %}
+<p class="text-gray-500">
+    Seu carrinho está vazio.
+    <a href="{% url 'storefront:home' %}" class="text-blue-700 hover:underline">Voltar às compras</a>.
+</p>
+{% endif %}
+{% endblock %}
