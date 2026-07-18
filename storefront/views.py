@@ -7,6 +7,8 @@ from django.views.decorators.http import require_POST
 from catalog.models import Category, Product
 from orders.services import OrderError, create_order
 
+from .carrinho import Carrinho
+
 
 def home(request: HttpRequest) -> HttpResponse:
     """Landing page: active products, filterable by category tab and search.
@@ -65,3 +67,68 @@ def comprar(request: HttpRequest, slug: str) -> HttpResponse:
         f"Pedido #{order.pk} criado com sucesso! Total: R$ {order.valor_total}.",
     )
     return redirect("storefront:product_detail", slug=slug)
+
+
+@login_required
+def carrinho(request: HttpRequest) -> HttpResponse:
+    cart = Carrinho(request)
+    return render(
+        request,
+        "storefront/carrinho.html",
+        {"itens": cart.itens(), "total": cart.total()},
+    )
+
+
+@require_POST
+@login_required
+def adicionar_ao_carrinho(request: HttpRequest, slug: str) -> HttpResponse:
+    produto = get_object_or_404(Product, slug=slug, ativo=True)
+    try:
+        quantidade = max(1, int(request.POST.get("quantidade", 1)))
+    except (TypeError, ValueError):
+        quantidade = 1
+    Carrinho(request).adicionar(produto, quantidade)
+    messages.success(request, f'"{produto.nome}" adicionado ao carrinho.')
+    return redirect("storefront:carrinho")
+
+
+@require_POST
+@login_required
+def atualizar_item_carrinho(request: HttpRequest, product_id: int) -> HttpResponse:
+    try:
+        quantidade = int(request.POST.get("quantidade", 1))
+    except (TypeError, ValueError):
+        quantidade = 1
+    Carrinho(request).atualizar(product_id, quantidade)
+    return redirect("storefront:carrinho")
+
+
+@require_POST
+@login_required
+def remover_do_carrinho(request: HttpRequest, product_id: int) -> HttpResponse:
+    Carrinho(request).remover(product_id)
+    return redirect("storefront:carrinho")
+
+
+@require_POST
+@login_required
+def finalizar_compra(request: HttpRequest) -> HttpResponse:
+    """Turn the session cart into a real Order via the shared stock-safe service."""
+    cart = Carrinho(request)
+    items = cart.to_service_items()
+    if not items:
+        messages.error(request, "Seu carrinho está vazio.")
+        return redirect("storefront:carrinho")
+
+    try:
+        order = create_order(request.user, items)
+    except OrderError as exc:
+        messages.error(request, str(exc))
+        return redirect("storefront:carrinho")
+
+    cart.limpar()
+    messages.success(
+        request,
+        f"Pedido #{order.pk} criado com sucesso! Total: R$ {order.valor_total}.",
+    )
+    return redirect("storefront:home")
